@@ -1,0 +1,60 @@
+# ==============================================================================
+# STAGE 1: Wheels Builder (The Assembly Line)
+# ==============================================================================
+FROM python:3.12-alpine3.20 AS builder
+
+WORKDIR /usr/src/app
+
+# Set environment variables to prevent Python from writing pyc files and buffering
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies required for compiling heavy DB drivers (like psycopg2)
+RUN apk add --no-cache gcc musl-dev postgresql-dev libffi-dev g++
+
+# Upgrade pip and pull down dependencies
+RUN pip install --no-cache-dir --upgrade pip
+COPY requirements.txt .
+
+# Build Python wheels in a sandbox directory to isolate build dependencies
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
+
+# ==============================================================================
+# STAGE 2: Hardened Runtime (The Production Sandbox)
+# ==============================================================================
+FROM python:3.12-alpine3.20 AS runtime
+
+WORKDIR /usr/src/app
+
+# Production environment configurations
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
+
+# Install only runtime shared libraries (libpq for Postgres) – keeping the image tiny
+RUN apk add --no-cache libpq
+
+# Security Hardening: Create a non-root system user for the checkout engine
+RUN addgroup --system --gid 10001 ecommerce-group && \
+    adduser --system --uid 10001 --ingroup ecommerce-group ecommerce-user
+
+# Copy wheels from the builder stage and install them cleanly
+COPY --from=builder /usr/src/app/wheels /wheels
+COPY --from=builder /usr/src/app/requirements.txt .
+RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt && rm -rf /wheels
+
+# Copy only the necessary application code with explicit ownership
+COPY --chown=ecommerce-user:ecommerce-group . .
+
+# Drop privileges immediately
+USER ecommerce-user
+
+EXPOSE 8000
+
+# Localized telemetry to check if Django is active before routing users
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; return_code = urllib.request.urlopen('http://localhost:8000/api/health/').getcode(); exit(0 if return_code == 200 else 1)"
+
+# Exec Form to capture SIGTERM signals properly. 
+# We use Gunicorn with 4 workers (standard for heavy traffic CPU bound handling)
+CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:8000", "--forwarded-allow-ips=*", "my_project.wsgi:application"]
