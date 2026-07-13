@@ -16,16 +16,7 @@ class ProductVariantInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
 
-    list_display = (
-        "id",
-        "name",
-        "sku",
-        "price",
-        "stock_quantity",
-        "status",
-        "is_featured",
-        "created_at",
-    )
+   list_display = ("id", "name", "price", "discount_price", "stock", "status", "is_featured", "created_at")
 
     list_filter = (
         "status",
