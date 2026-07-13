@@ -22,6 +22,9 @@ class ProductListAPIView(View):
                 "sku": p.sku,
                 "price": str(p.price),
                 "sale_price": str(p.sale_price),
+                "discount_price": str(p.discount_price) 
+                if p.discount_price else None,
+                "stock": p.stock,
                 "stock": p.stock_quantity,
                 "featured": p.is_featured,
             }
