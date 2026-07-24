@@ -16,15 +16,13 @@ class MicrosecondSerializer:
     Ultra-performance data validation engine.
     Uses strict slots and dictionary-based constraint verification.
     """
-    __slots__ = ()  # Zero memory instantiation overhead
-
+    __slots__ = ()  
     @staticmethod
     def validate_request(raw_data: Dict[str, Any]) -> Tuple[bool, str, GatewayRequestDict]:
         """
         Validates raw payload data with structural isolation.
         Returns a Tuple: (is_valid, error_message, cleaned_dict)
         """
-        # 1. Structural Layer Verification
         payment_method = raw_data.get("payment_method")
         payload = raw_data.get("payload")
 
@@ -34,7 +32,6 @@ class MicrosecondSerializer:
         if payment_method not in SUPPORTED_METHODS:
             return False, f"Unsupported payment rail architecture: {payment_method}", {}
 
-        # 2. Extract and Validate Inner Payload Fields
         order_id = payload.get("order_id")
         amount = payload.get("amount")
         currency = payload.get("currency", "USD")
@@ -49,7 +46,6 @@ class MicrosecondSerializer:
         except (ValueError, TypeError):
             return False, "Amount data cast execution failure", {}
 
-        # 3. Compile clean dataset into optimized structure
         cleaned_data: GatewayRequestDict = {
             "payment_method": str(payment_method),
             "payload": {
