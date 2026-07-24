@@ -1,7 +1,5 @@
-
 import typing
 
-# Supported Payment Methods (Strict Tuple)
 SUPPORTED_METHODS: typing.Final[tuple[str, ...]] = (
     "CARD_STRIPE",
     "CARD_PAYPAL",
@@ -14,7 +12,6 @@ SUPPORTED_METHODS: typing.Final[tuple[str, ...]] = (
     "AGGREGATOR_SSLCOMMERZ",
 )
 
-# Gateway Transaction Statuses
 STATUS_PENDING: typing.Final[str] = "PENDING"
 STATUS_SUCCESS: typing.Final[str] = "SUCCESS"
 STATUS_FAILED: typing.Final[str] = "FAILED"
