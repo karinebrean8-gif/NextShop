@@ -24,7 +24,6 @@ class BasePaymentStrategy(ABC):
 
 class StripeStrategy(BasePaymentStrategy):
     def initialize_transaction(self, payload: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        # High-performance Stripe Intent Creation logic
         return ("PENDING", {"stripe_client_secret": "st_test_xyz123", "mode": "intent"})
 
     def verify_webhook(self, headers: Dict[str, Any], body: bytes) -> Tuple[str, bool]:
@@ -33,7 +32,6 @@ class StripeStrategy(BasePaymentStrategy):
 
 class VisaDirectStrategy(BasePaymentStrategy):
     def initialize_transaction(self, payload: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        # ISO 8583 Message generation for raw Visa Direct clearing
         return ("SUCCESS", {"approval_code": "00", "rrn": "123456789012"})
 
     def verify_webhook(self, headers: Dict[str, Any], body: bytes) -> Tuple[str, bool]:
@@ -42,7 +40,6 @@ class VisaDirectStrategy(BasePaymentStrategy):
 
 class BkashStrategy(BasePaymentStrategy):
     def initialize_transaction(self, payload: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        # MFS Tokenized Checkout API
         return ("PENDING", {"bkash_url": "https://checkout.bkash.com/payment"})
 
     def verify_webhook(self, headers: Dict[str, Any], body: bytes) -> Tuple[str, bool]:
@@ -51,7 +48,6 @@ class BkashStrategy(BasePaymentStrategy):
 
 class BinanceCryptoStrategy(BasePaymentStrategy):
     def initialize_transaction(self, payload: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        # Binance Pay Order creation (Crypto Rails)
         return ("PENDING", {"qrcode_data": "binance://payment/...", "currency": "USDT"})
 
     def verify_webhook(self, headers: Dict[str, Any], body: bytes) -> Tuple[str, bool]:
@@ -60,7 +56,6 @@ class BinanceCryptoStrategy(BasePaymentStrategy):
 
 class CodStrategy(BasePaymentStrategy):
     def initialize_transaction(self, payload: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-        # Cash on Delivery skipping live processing pipelines
         return ("SUCCESS", {"message": "Order marked for COD fulfillment"})
 
     def verify_webhook(self, headers: Dict[str, Any], body: bytes) -> Tuple[str, bool]:
