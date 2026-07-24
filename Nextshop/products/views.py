@@ -55,13 +55,11 @@ SUCCESS_MESSAGES = {
     'PRODUCT_DELETED': 'Product deleted successfully',
 }
 
-# ====== PAGINATION ======
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 100
 
-# ====== API 1: PRODUCT LIST WITH FILTER + SEARCH + SORT ======
 class ProductListAPIView(generics.ListAPIView):
     """
     L19: Advanced filtering, searching, sorting, pagination
@@ -79,7 +77,6 @@ class ProductListAPIView(generics.ListAPIView):
     def get_queryset(self):
         queryset = Product.objects.filter(status='published', is_deleted=False).select_related('category', 'brand', 'seller').prefetch_related('variants')
 
-        # FILTER DICTIONARY LOGIC
         filters_dict = {
             'category_id': self.request.GET.get('category'),
             'brand_id': self.request.GET.get('brand'),
@@ -93,7 +90,6 @@ class ProductListAPIView(generics.ListAPIView):
             if value:
                 queryset = queryset.filter(**{key: value})
 
-        # PRICE RANGE
         price_min = self.request.GET.get('price_min')
         price_max = self.request.GET.get('price_max')
         if price_min:
@@ -101,12 +97,10 @@ class ProductListAPIView(generics.ListAPIView):
         if price_max:
             queryset = queryset.filter(price__lte=price_max)
 
-        # SORT LOGIC FROM TUPLE
         sort = self.request.GET.get('sort', 'newest')
         sort_dict = dict(SORT_OPTIONS)
         if sort in sort_dict:
             queryset = queryset.order_by(sort_dict[sort])
-
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -120,16 +114,12 @@ class ProductListAPIView(generics.ListAPIView):
             'data': response.data
         })
 
-# ====== API 2: PRODUCT DETAIL ======
 class ProductDetailAPIView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
-
     def get_serializer_class(self):
         return ProductDetailSerializer
-
     def get_queryset(self):
         return Product.objects.filter(is_deleted=False).select_related('category', 'brand', 'seller').prefetch_related('variants')
-
     def retrieve(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
@@ -145,8 +135,6 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
                 'code': API_RESPONSE_CODES['NOT_FOUND'],
                 'message': ERROR_MESSAGES['PRODUCT_NOT_FOUND']
             }, status=status.HTTP_404_NOT_FOUND)
-
-# ====== API 3: PRODUCT CREATE ======
 class ProductCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
